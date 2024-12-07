@@ -6,11 +6,11 @@ class CardDatabase {
                 description: "Erhöhe die Steuern, um das Budget auszugleichen.",
                 type: .demand,
                 acceptEffects: [
-                    Effect(group: "Arbeiter", value: -5),
-                    Effect(group: "Unternehmer", value: 5)
+                    Effect(group: "Staatskasse", value: 10),
+                    Effect(group: "Volk", value: -5)
                 ],
                 rejectEffects: [
-                    Effect(group: "Arbeiter", value: 5)
+                    Effect(group: "Staatskasse", value: -10)
                 ],
                 imageName: "taxesIcon",
                 acceptText: "Budget gesichert.",
@@ -21,10 +21,12 @@ class CardDatabase {
                 description: "Investiere in erneuerbare Energien.",
                 type: .building,
                 acceptEffects: [
-                    Effect(group: "Umweltschützer", value: 10)
+                    Effect(group: "Volk", value: 5),
+                    Effect(group: "Staatskasse", value: -5)
                 ],
                 rejectEffects: [
-                    Effect(group: "Unternehmer", value: -5)
+                    Effect(group: "Volk", value: -5),
+                    Effect(group: "Staatskasse", value: 5)
                 ],
                 imageName: "solarIcon",
                 acceptText: "Umwelt freut sich.",
@@ -35,11 +37,12 @@ class CardDatabase {
                 description: "Arbeitszeit der Arbeiter auf 35 Stunden pro Woche reduzieren.",
                 type: .demand,
                 acceptEffects: [
-                    Effect(group: "Arbeiter", value: 10),
-                    Effect(group: "Unternehmer", value: -10)
+                    Effect(group: "Volk", value: 10),
+                    Effect(group: "Staatskasse", value: -10)
                 ],
                 rejectEffects: [
-                    Effect(group: "Arbeiter", value: -5)
+                    Effect(group: "Volk", value: -5),
+                    Effect(group: "Staatskasse", value: 5)
                 ],
                 imageName: "worktimeIcon",
                 acceptText: "Mehr Freizeit.",
@@ -50,11 +53,12 @@ class CardDatabase {
                 description: "Das Militärbudget zur Landesverteidigung erhöhen.",
                 type: .demand,
                 acceptEffects: [
-                    Effect(group: "Militär", value: 10),
+                    Effect(group: "Staatskasse", value: -15),
                     Effect(group: "Volk", value: -5)
                 ],
                 rejectEffects: [
-                    Effect(group: "Militär", value: -10)
+                    Effect(group: "Staatskasse", value: 10),
+                    Effect(group: "Volk", value: 5)
                 ],
                 imageName: "militaryIcon",
                 acceptText: "Budget steigt.",
@@ -66,10 +70,11 @@ class CardDatabase {
                 type: .building,
                 acceptEffects: [
                     Effect(group: "Volk", value: 10),
-                    Effect(group: "Unternehmer", value: -5)
+                    Effect(group: "Staatskasse", value: -10)
                 ],
                 rejectEffects: [
-                    Effect(group: "Volk", value: -5)
+                    Effect(group: "Volk", value: -5),
+                    Effect(group: "Staatskasse", value: 5)
                 ],
                 imageName: "educationIcon",
                 acceptText: "Schulen gefördert.",

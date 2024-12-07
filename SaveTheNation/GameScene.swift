@@ -6,6 +6,8 @@ class GameScene: SKScene {
     private var currentCardNode: CardNode?
     private let margin: CGFloat = 15 // Margin links und rechts
     private var isDraggingCard = false
+    private var populationGrid: PopulationGrid?
+    
     
     override func didMove(to view: SKView) {
         backgroundColor = backgroundColor
@@ -15,10 +17,14 @@ class GameScene: SKScene {
         
 
         // Platzhalter: Bevölkerungsgrid
-        let gridSize = CGSize(width: size.width, height: size.height * 0.85)
-        let populationGrid = PopulationGrid(size: gridSize, groupCount: 3, margin: margin, gap: 5)
-        populationGrid.position = CGPoint(x: size.width / 2, y: size.height * 0.85) // Positionierung in der oberen Hälfte
-        addChild(populationGrid)
+        let initialGroups = Array(gameManager.populationGroups.prefix(2))
+        let gridSize = CGSize(width: size.width, height: size.height * 0.1)
+        populationGrid = PopulationGrid(size: gridSize, groups: initialGroups, margin: 15, gap: 10)
+                if let populationGrid = populationGrid {
+                    populationGrid.position = CGPoint(x: size.width / 2, y: size.height * 0.85)
+                    addChild(populationGrid) // Füge das Grid zur Szene hinzu
+                }
+
 
 
         // Platzhalter: Monatszähler
@@ -138,7 +144,7 @@ class GameScene: SKScene {
         cardNode.position.y += dy * 0.8 // Leichte Bewegung in y-Richtung
         
         // Drehung proportional zur x-Bewegung
-        let rotationFactor: CGFloat = 0.002 // Winkel pro Pixel
+        let rotationFactor: CGFloat = -0.002 // Winkel pro Pixel
         cardNode.zRotation += dx * rotationFactor
         
         // Färbung und Text basierend auf der Swipe-Distanz
@@ -152,12 +158,12 @@ class GameScene: SKScene {
             // Links swipen: Akzeptieren (Grün)
             cardNode.color = .green // Setze die Farbe nur bei Bedarf
             cardNode.colorBlendFactor = intensity
-            showSwipeText(cardNode.card.acceptText, color: .white, position: CGPoint(x: distanceFromCenter + 200, y: size.height / 2 - 100))
+            showSwipeText(cardNode.card.acceptText, color: .white, position: CGPoint(x: distanceFromCenter + 200, y: size.height / 2 + 150))
         } else {
             // Rechts swipen: Ablehnen (Rot)
             cardNode.color = .red // Setze die Farbe nur bei Bedarf
             cardNode.colorBlendFactor = intensity
-            showSwipeText(cardNode.card.rejectText, color: .white, position: CGPoint(x: size.width - distanceFromCenter - 200, y: size.height / 2 - 100))
+            showSwipeText(cardNode.card.rejectText, color: .white, position: CGPoint(x: size.width - distanceFromCenter - 200, y: size.height / 2 + 150))
         }
     }
 
@@ -201,18 +207,55 @@ class GameScene: SKScene {
         let textMoveAction = SKAction.moveTo(x: textTargetX, duration: 0.3)
         textMoveAction.timingMode = .easeIn
         
-        // Beide Animationen ausführen
+        // Führe die Animationen aus
         cardNode.run(cardMoveAction) { [weak self] in
+            guard let self = self else { return }
+            
+            // Karte entfernen
             cardNode.removeFromParent()
-            self?.currentCardNode = nil
-            self?.gameManager.endTurn(accepted: accepted, card: cardNode.card)
-            self?.startTurn()
+            self.currentCardNode = nil
+            
+            // Effekte anwenden und Populationen aktualisieren
+            let effects = accepted ? cardNode.card.acceptEffects : cardNode.card.rejectEffects
+
+            for effect in effects {
+                if let index = self.gameManager.populationGroups.firstIndex(where: { $0.name == effect.group }) {
+                    let group = self.gameManager.populationGroups[index]
+                    let oldSatisfaction = group.satisfaction
+                    
+                    // Zufriedenheit aktualisieren
+                    group.adjustSatisfaction(by: effect.value)
+                    let updatedSatisfaction = group.satisfaction
+                    
+                    // Population im Grid aktualisieren
+                    self.populationGrid?.updatePopulation(at: index, satisfaction: updatedSatisfaction)
+                    
+                    // Debugging-Ausgabe
+                    print("""
+                    Effekt angewendet:
+                    Gruppe: \(group.name)
+                    Effektwert: \(effect.value)
+                    Alte Zufriedenheit: \(oldSatisfaction)
+                    Neue Zufriedenheit: \(updatedSatisfaction)
+                    """)
+                } else {
+                    // Debugging-Ausgabe, wenn die Gruppe nicht gefunden wird
+                    print("Warnung: Gruppe '\(effect.group)' wurde nicht gefunden.")
+                }
+            }
+
+            
+            // Beende den Zug
+            self.gameManager.endTurn(accepted: accepted, card: cardNode.card)
+            self.startTurn()
         }
         
+        // Text herausfliegen lassen
         textNode.run(textMoveAction) {
             textNode.removeFromParent()
         }
     }
+
 
 
 

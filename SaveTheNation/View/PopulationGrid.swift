@@ -1,40 +1,36 @@
 import SpriteKit
 
 class PopulationGrid: SKNode {
+    private var populationItems: [PopulationNode] = [] // Speichert PopulationItems
     
-    private var groupNodes: [SKShapeNode] = [] // Speichert die Populationen
-    
-    init(size: CGSize, groupCount: Int, margin: CGFloat, gap: CGFloat) {
+    init(size: CGSize, groups: [PopulationGroup], margin: CGFloat, gap: CGFloat) {
         super.init()
         
-        // Dynamische Berechnung der Breite und Positionen
+        let groupCount = groups.count
         let totalGap = gap * CGFloat(groupCount - 1) // Gesamtbreite der Gaps
-        let availableWidth = size.width - (2 * margin) - totalGap // Verfügbare Breite für Kästchen
-        let itemWidth = availableWidth / CGFloat(groupCount) // Dynamische Breite jedes Objekts
-        let itemSize = CGSize(width: itemWidth, height: 60) // Größe jedes Platzhalters
-
-        for i in 0..<groupCount {
-            // Erstelle SKShapeNode mit abgerundeten Ecken
-            let groupNode = SKShapeNode(rectOf: itemSize, cornerRadius: 15)
-            groupNode.fillColor = .darkGray
-            groupNode.strokeColor = .clear
-
-            // Position der Objekte im Grid
-            let xPosition = margin + (itemWidth / 2) + (CGFloat(i) * (itemWidth + gap)) - (size.width / 2)
-            groupNode.position = CGPoint(x: xPosition, y: 0)
+        let availableWidth = size.width - (2 * margin) - totalGap // Verfügbare Breite
+        let itemWidth = availableWidth / CGFloat(groupCount) // Breite jedes Objekts
+        let itemSize = CGSize(width: itemWidth, height: size.height)
+        
+        for (i, group) in groups.enumerated() {
+            let populationNode = PopulationNode(size: itemSize, imageName: group.imageName, initialSatisfaction: group.satisfaction)
             
-            addChild(groupNode)
-            groupNodes.append(groupNode)
+            // Position der PopulationItem
+            let xPosition = margin + (itemWidth / 2) + (CGFloat(i) * (itemWidth + gap)) - (size.width / 2)
+            populationNode.position = CGPoint(x: xPosition, y: 0)
+            
+            addChild(populationNode)
+            populationItems.append(populationNode)
         }
-    }
-
-    // Methode zum Aktualisieren der Farbe einer Population
-    func updateGroupColor(index: Int, color: UIColor) {
-        guard index >= 0 && index < groupNodes.count else { return }
-        groupNodes[index].fillColor = color
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // Aktualisiere eine Population
+    func updatePopulation(at index: Int, satisfaction: Int) {
+        guard index >= 0 && index < populationItems.count else { return }
+        populationItems[index].updateSatisfaction(to: satisfaction)
     }
 }
