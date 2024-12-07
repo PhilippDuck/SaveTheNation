@@ -13,16 +13,12 @@ class GameScene: SKScene {
         // GameManager initialisieren
         gameManager = GameManager()
         
-        // Runde starten
-        startTurn()
-        
 
         // Platzhalter: Bevölkerungsgrid
         let gridSize = CGSize(width: size.width, height: size.height * 0.85)
         let populationGrid = PopulationGrid(size: gridSize, groupCount: 3, margin: margin, gap: 5)
         populationGrid.position = CGPoint(x: size.width / 2, y: size.height * 0.85) // Positionierung in der oberen Hälfte
         addChild(populationGrid)
-
 
 
         // Platzhalter: Monatszähler
@@ -32,6 +28,9 @@ class GameScene: SKScene {
         monthLabel.fontColor = .white
         monthLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.1)
         addChild(monthLabel)
+        
+        // Runde starten
+        startTurn()
     }
     
     // Starte eine neue Runde
@@ -53,7 +52,7 @@ class GameScene: SKScene {
         currentCardNode?.removeFromParent()
         
         // Definiere die Größe und den Corner Radius
-        let cardSize = CGSize(width: size.width - (2 * margin), height: 500) // Dynamische Breite
+        let cardSize = CGSize(width: size.width - (2 * margin), height: 450) // Dynamische Breite
         let cornerRadius: CGFloat = 20 // Fester Corner Radius
         
         // Erstelle eine neue Karte

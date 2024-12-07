@@ -11,7 +11,7 @@ class CardNode: SKSpriteNode {
         let texture = CardNode.createRoundedRectTexture(size: size, color: .darkGray, cornerRadius: cornerRadius)
         super.init(texture: texture, color: .clear, size: size)
         
-        // Setze Inhalte (Titel und Beschreibung)
+        // Setze Inhalte (Titel, Beschreibung und Bild)
         setupCardContent(title: card.title, description: card.description, size: size)
     }
     
@@ -21,23 +21,14 @@ class CardNode: SKSpriteNode {
     
     // MARK: - Textur mit abgerundeten Ecken erstellen
     static func createRoundedRectTexture(size: CGSize, color: UIColor, cornerRadius: CGFloat) -> SKTexture {
-        // Rechteck für den Zeichenbereich
         let rect = CGRect(origin: .zero, size: size)
-        
-        // Erstelle einen Kontext für das Zeichnen
         UIGraphicsBeginImageContextWithOptions(size, false, 0)
         let context = UIGraphicsGetCurrentContext()
-        
-        // Zeichne ein abgerundetes Rechteck
         let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
-        context?.setFillColor(color.cgColor) // Fülle mit der angegebenen Farbe
+        context?.setFillColor(color.cgColor)
         path.fill()
-        
-        // Hole das Bild aus dem Kontext
         let image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        
-        // Konvertiere das Bild in eine SKTexture
         return SKTexture(image: image!)
     }
     
@@ -48,20 +39,39 @@ class CardNode: SKSpriteNode {
         titleLabel.fontName = "AvenirNext-Bold"
         titleLabel.fontSize = 24
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: 0, y: size.height / 4) // Oben zentriert
-        titleLabel.zPosition = 1 // Über der Textur
+        titleLabel.position = CGPoint(x: 0, y: size.height / 2 - 50)
+        titleLabel.zPosition = 1
         addChild(titleLabel)
         
         // Beschreibung (Mitte der Karte)
         let descriptionLabel = SKLabelNode(text: description)
         descriptionLabel.fontName = "AvenirNext-Regular"
-        descriptionLabel.fontSize = 16
+        descriptionLabel.fontSize = 20
         descriptionLabel.fontColor = .white
-        descriptionLabel.position = CGPoint(x: 0, y: -size.height / 8) // Unterhalb des Titels
-        descriptionLabel.zPosition = 1 // Über der Textur
-        descriptionLabel.numberOfLines = 0 // Mehrzeiliger Text
-        descriptionLabel.preferredMaxLayoutWidth = size.width - 20 // Begrenzung auf Kartenbreite
+        descriptionLabel.position = CGPoint(x: 0, y: size.height / 2 - 60)
+        descriptionLabel.zPosition = 1
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.preferredMaxLayoutWidth = size.width - 20
         descriptionLabel.verticalAlignmentMode = .top
         addChild(descriptionLabel)
+        
+        // Bild unterhalb der Beschreibung
+        let imageNode = ladeBild(named: card.imageName)
+        imageNode.size = CGSize(width: size.width * 0.8, height: size.width * 0.8)
+        imageNode.position = CGPoint(x: 0, y: -size.height / 8)
+        imageNode.zPosition = 1
+        addChild(imageNode)
+    }
+    
+    // MARK: - Bildladefunktion mit Fallback
+    private func ladeBild(named imageName: String) -> SKSpriteNode {
+        if UIImage(named: imageName) != nil {
+            // Das Bild existiert
+            return SKSpriteNode(imageNamed: imageName)
+        } else {
+            // Fallback-Bild verwenden
+            print("Bild '\(imageName)' nicht gefunden. Fallback auf 'dummy.png'.")
+            return SKSpriteNode(imageNamed: "dummy")
+        }
     }
 }
