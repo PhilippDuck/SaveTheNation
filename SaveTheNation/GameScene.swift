@@ -73,8 +73,46 @@ class GameScene: SKScene {
         // Führe die Animation aus
         newCardNode.run(moveAction)
     }
-
+    
+    private func showSwipeText(_ text: String, color: UIColor, position: CGPoint) {
+        let labelTag = 999 // Tag, um den Text eindeutig zu identifizieren
         
+        // Entferne vorherige Texte
+        hideSwipeText()
+        
+        // Teile den Text in einzelne Wörter
+        let words = text.split(separator: " ")
+        
+        // Erstelle einen Node, der alle Wörter enthält
+        let parentNode = SKNode()
+        parentNode.name = "\(labelTag)"
+        parentNode.position = position
+        parentNode.zPosition = -1 // Hinter der Karte
+        
+        // Füge für jedes Wort ein Label hinzu
+        let lineHeight: CGFloat = 30 // Abstand zwischen den Zeilen
+        for (index, word) in words.enumerated() {
+            let wordLabel = SKLabelNode(text: String(word))
+            wordLabel.fontName = "AvenirNext-Bold"
+            wordLabel.fontSize = 24
+            wordLabel.fontColor = color
+            wordLabel.position = CGPoint(x: 0, y: -CGFloat(index) * lineHeight) // Vertikale Position
+            wordLabel.horizontalAlignmentMode = .center
+            wordLabel.verticalAlignmentMode = .center
+            parentNode.addChild(wordLabel)
+        }
+        
+        // Füge den Node zur Szene hinzu
+        addChild(parentNode)
+    }
+
+    
+    private func hideSwipeText() {
+        let labelTag = 999
+        childNode(withName: "\(labelTag)")?.removeFromParent()
+    }
+
+
         // Berührung starten
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
             guard let touch = touches.first, let cardNode = currentCardNode else { return }
@@ -86,70 +124,119 @@ class GameScene: SKScene {
             }
         }
         
-        // Karte bewegen
-        override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-            guard let touch = touches.first, let cardNode = currentCardNode, isDraggingCard else { return }
-            let location = touch.location(in: self)
-            let previousLocation = touch.previousLocation(in: self)
-            
-            // Bewegung und Rotation berechnen
-            let dx = location.x - previousLocation.x
-            let dy = location.y - previousLocation.y
-            
-            // Aktualisiere die Position
-            cardNode.position.x += dx * 1.2 // Überproportionale Bewegung in x-Richtung
-            cardNode.position.y += dy * 0.8 // Leichte Bewegung in y-Richtung
-            
-            // Drehung proportional zur x-Bewegung
-            let rotationFactor: CGFloat = 0.002 // Winkel pro Pixel
-            cardNode.zRotation += dx * rotationFactor
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first, let cardNode = currentCardNode, isDraggingCard else { return }
+        let location = touch.location(in: self)
+        let previousLocation = touch.previousLocation(in: self)
+        
+        // Bewegung und Rotation berechnen
+        let dx = location.x - previousLocation.x
+        let dy = location.y - previousLocation.y
+        
+        // Aktualisiere die Position
+        cardNode.position.x += dx * 1.2 // Überproportionale Bewegung in x-Richtung
+        cardNode.position.y += dy * 0.8 // Leichte Bewegung in y-Richtung
+        
+        // Drehung proportional zur x-Bewegung
+        let rotationFactor: CGFloat = 0.002 // Winkel pro Pixel
+        cardNode.zRotation += dx * rotationFactor
+        
+        // Färbung und Text basierend auf der Swipe-Distanz
+        let centerX = size.width / 2
+        let distanceFromCenter = abs(cardNode.position.x - centerX)
+        let maxDistance = centerX // Maximale Distanz entspricht der halben Breite
+        let intensity = min(distanceFromCenter / maxDistance, 0.6) // Begrenzung auf 1.0
+
+        // Swipe-Richtung und Textbewegung
+        if cardNode.position.x < centerX {
+            // Links swipen: Akzeptieren (Grün)
+            cardNode.color = .green // Setze die Farbe nur bei Bedarf
+            cardNode.colorBlendFactor = intensity
+            showSwipeText(cardNode.card.acceptText, color: .white, position: CGPoint(x: distanceFromCenter + 200, y: size.height / 2 - 100))
+        } else {
+            // Rechts swipen: Ablehnen (Rot)
+            cardNode.color = .red // Setze die Farbe nur bei Bedarf
+            cardNode.colorBlendFactor = intensity
+            showSwipeText(cardNode.card.rejectText, color: .white, position: CGPoint(x: size.width - distanceFromCenter - 200, y: size.height / 2 - 100))
+        }
+    }
+
+
+
+
+
+        
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let cardNode = currentCardNode, isDraggingCard else { return }
+        isDraggingCard = false
+        
+        // Prüfen, ob die Karte weit genug nach rechts oder links gezogen wurde
+        if cardNode.position.x > size.width * 0.75 {
+            swipeCard(accepted: false) // Ablehnen
+        } else if cardNode.position.x < size.width * 0.25 {
+            swipeCard(accepted: true) // Akzeptieren
+        } else {
+            // Zurück zur Mitte bewegen
+            resetCardPosition(cardNode)
+        }
+    }
+
+
+        
+    private func swipeCard(accepted: Bool) {
+        guard let cardNode = currentCardNode else { return }
+        
+        let labelTag = 999
+        guard let textNode = childNode(withName: "\(labelTag)") else { return }
+        
+        // Zielpositionen für Karte und Text
+        let cardTargetX = accepted ? -cardNode.size.width : size.width + cardNode.size.width
+        let textTargetX = accepted ? size.width * 1.5 : -size.width * 0.5 // Text fliegt in die entgegengesetzte Richtung
+        
+        // Karte herausfliegen lassen
+        let cardMoveAction = SKAction.moveTo(x: cardTargetX, duration: 0.3)
+        cardMoveAction.timingMode = .easeIn
+        
+        // Text in entgegengesetzte Richtung herausfliegen lassen
+        let textMoveAction = SKAction.moveTo(x: textTargetX, duration: 0.3)
+        textMoveAction.timingMode = .easeIn
+        
+        // Beide Animationen ausführen
+        cardNode.run(cardMoveAction) { [weak self] in
+            cardNode.removeFromParent()
+            self?.currentCardNode = nil
+            self?.gameManager.endTurn(accepted: accepted, card: cardNode.card)
+            self?.startTurn()
         }
         
-        // Berührung loslassen
-        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-            guard let touch = touches.first, let cardNode = currentCardNode, isDraggingCard else { return }
-            isDraggingCard = false
-            
-            // Prüfen, ob die Karte weit genug nach rechts oder links gezogen wurde
-            if cardNode.position.x > size.width * 0.75 {
-                swipeCard(accepted: true)
-            } else if cardNode.position.x < size.width * 0.25 {
-                swipeCard(accepted: false)
-            } else {
-                // Zurück zur Mitte bewegen
-                resetCardPosition(cardNode)
-            }
+        textNode.run(textMoveAction) {
+            textNode.removeFromParent()
         }
-        
-        // Karte swipen (Akzeptieren/Ablehnen)
-        private func swipeCard(accepted: Bool) {
-            guard let cardNode = currentCardNode else { return }
-            
-            // Zielposition (rechts oder links außerhalb des Bildschirms)
-            let targetX = accepted ? size.width + cardNode.size.width : -cardNode.size.width
-            let moveAction = SKAction.moveTo(x: targetX, duration: 0.3)
-            moveAction.timingMode = .easeIn
-            
-            // Entferne die Karte mit einer Animation
-            cardNode.run(moveAction) { [weak self] in
-                cardNode.removeFromParent()
-                self?.currentCardNode = nil
-                self?.gameManager.endTurn(accepted: accepted, card: cardNode.card) // Übergabe an GameManager
-                self?.startTurn()
-            }
-        }
+    }
+
+
+
+
         
         // Karte zurück zur Mitte bewegen
-        private func resetCardPosition(_ cardNode: CardNode) {
-            let resetPosition = CGPoint(x: size.width / 2, y: size.height / 2)
-            let resetRotation = SKAction.rotate(toAngle: 0, duration: 0.2, shortestUnitArc: true)
-            let resetMove = SKAction.move(to: resetPosition, duration: 0.2)
-            let resetGroup = SKAction.group([resetRotation, resetMove])
-            cardNode.run(resetGroup)
+    private func resetCardPosition(_ cardNode: CardNode) {
+        // Zurücksetzen der Farbblendung
+        let resetColor = SKAction.customAction(withDuration: 0.2) { node, _ in
+            if let spriteNode = node as? SKSpriteNode {
+                spriteNode.colorBlendFactor = 0 // Entferne Farbüberlagerung
+            }
         }
-    
-    
-    
+
+        // Zurück zur Mitte bewegen
+        let resetPosition = CGPoint(x: size.width / 2, y: size.height / 2)
+        let resetRotation = SKAction.rotate(toAngle: 0, duration: 0.2, shortestUnitArc: true)
+        let resetMove = SKAction.move(to: resetPosition, duration: 0.2)
+        let resetGroup = SKAction.group([resetRotation, resetMove, resetColor])
+        cardNode.run(resetGroup)
+        
+        // Entferne den Swipe-Text
+        hideSwipeText()
+    }
 
 
 }
