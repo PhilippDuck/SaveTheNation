@@ -1,4 +1,16 @@
 class CardDatabase {
+    static func getGameOverCard() -> Card {
+        return Card(
+            title: "Game Over",
+            description: "Das Spiel ist vorbei. Wischen Sie, um neu zu starten.",
+            type: .demand,
+            acceptEffects: [],
+            rejectEffects: [],
+            imageName: "gameoverIcon", // Ein spezielles Game-Over-Symbol
+            acceptText: "Neustart",
+            rejectText: "Neustart"
+        )
+    }
     static func getInitialDeck() -> [Card] {
         return [
             Card(

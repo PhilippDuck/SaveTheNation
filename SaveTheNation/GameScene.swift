@@ -211,43 +211,31 @@ class GameScene: SKScene {
         cardNode.run(cardMoveAction) { [weak self] in
             guard let self = self else { return }
             
-            // Karte entfernen
             cardNode.removeFromParent()
             self.currentCardNode = nil
             
-            // Effekte anwenden und Populationen aktualisieren
-            let effects = accepted ? cardNode.card.acceptEffects : cardNode.card.rejectEffects
-
-            for effect in effects {
-                if let index = self.gameManager.populationGroups.firstIndex(where: { $0.name == effect.group }) {
-                    let group = self.gameManager.populationGroups[index]
-                    let oldSatisfaction = group.satisfaction
-                    
-                    // Zufriedenheit aktualisieren
-                    group.adjustSatisfaction(by: effect.value)
-                    let updatedSatisfaction = group.satisfaction
-                    
-                    // Population im Grid aktualisieren
-                    self.populationGrid?.updatePopulation(at: index, satisfaction: updatedSatisfaction)
-                    
-                    // Debugging-Ausgabe
-                    print("""
-                    Effekt angewendet:
-                    Gruppe: \(group.name)
-                    Effektwert: \(effect.value)
-                    Alte Zufriedenheit: \(oldSatisfaction)
-                    Neue Zufriedenheit: \(updatedSatisfaction)
-                    """)
-                } else {
-                    // Debugging-Ausgabe, wenn die Gruppe nicht gefunden wird
-                    print("Warnung: Gruppe '\(effect.group)' wurde nicht gefunden.")
+            if cardNode.card.title == "Game Over" {
+                // Neustart des Spiels
+                self.gameManager.setupGame()
+                // Populationen im Grid zurücksetzen
+                let groups = gameManager.populationGroups
+                for (index, group) in groups.enumerated() {
+                    populationGrid?.updatePopulation(at: index, satisfaction: group.satisfaction)
                 }
+                self.startTurn()
+            } else {
+                // Normale Effekte anwenden
+                self.gameManager.endTurn(accepted: accepted, card: cardNode.card)
+                let effects = accepted ? cardNode.card.acceptEffects : cardNode.card.rejectEffects
+                for effect in effects {
+                    if let index = self.gameManager.populationGroups.firstIndex(where: { $0.name == effect.group }) {
+                        let updatedSatisfaction = self.gameManager.populationGroups[index].satisfaction
+                        self.populationGrid?.updatePopulation(at: index, satisfaction: updatedSatisfaction)
+                    }
+                }
+                
+                self.startTurn()
             }
-
-            
-            // Beende den Zug
-            self.gameManager.endTurn(accepted: accepted, card: cardNode.card)
-            self.startTurn()
         }
         
         // Text herausfliegen lassen
@@ -255,6 +243,7 @@ class GameScene: SKScene {
             textNode.removeFromParent()
         }
     }
+
 
 
 

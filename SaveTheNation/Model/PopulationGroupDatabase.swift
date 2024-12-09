@@ -3,8 +3,8 @@ import Foundation
 class PopulationGroupDatabase {
     static func getInitialPopulationGroups() -> [PopulationGroup] {
         return [
-            PopulationGroup(name: "Staatskasse", satisfaction: 30, imageName: "treasuryIcon"),
-            PopulationGroup(name: "Volk", satisfaction: 20, imageName: "icon_volk"),
+            PopulationGroup(name: "Staatskasse", satisfaction: 50, imageName: "treasuryIcon"),
+            PopulationGroup(name: "Volk", satisfaction: 50, imageName: "icon_volk"),
             PopulationGroup(name: "Workers", satisfaction: 50, imageName: "workersIcon"),
             PopulationGroup(name: "Scientists", satisfaction: 50, imageName: "scientistsIcon"),
             PopulationGroup(name: "Entrepreneurs", satisfaction: 50, imageName: "entrepreneursIcon"),

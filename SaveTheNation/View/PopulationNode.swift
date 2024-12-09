@@ -34,7 +34,7 @@ class PopulationNode: SKNode {
     
     // Zufriedenheit mit Animation aktualisieren
     func updateSatisfaction(to newSatisfaction: Int) {
-        let newWidth = maxBarWidth * CGFloat(newSatisfaction) / 100.0
+        let newWidth = max(1, maxBarWidth * CGFloat(newSatisfaction) / 100.0) // Mindestbreite 1
         let barHeight = satisfactionBar.frame.height
         
         // Animation für die Breite des Ladebalkens
@@ -60,6 +60,7 @@ class PopulationNode: SKNode {
         let animationSequence = SKAction.sequence([scaleAction, colorUpdate])
         satisfactionBar.run(animationSequence)
     }
+
     
     // Farbe basierend auf Zufriedenheit
     private static func getColor(for satisfaction: Int) -> UIColor {

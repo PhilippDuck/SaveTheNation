@@ -16,18 +16,29 @@ class GameManager {
     
     // Spiel initialisieren
     func setupGame() {
+        // Spielzustand initialisieren
         turnCounter = 0
         treasury = 100
         
-        // Bevölkerungsgruppen aus der Datenbank laden
+        // Bevölkerungsgruppen und Karten initialisieren
         populationGroups = PopulationGroupDatabase.getInitialPopulationGroups()
         
-        // Kartenstapel aus der Datenbank laden
+
+        
         deck = CardDatabase.getInitialDeck()
+        discardPile.removeAll() // Ablagestapel leeren
     }
+
     
     // MARK: - Zuglogik
     func startTurn() -> Card? {
+        // Prüfen, ob das Spiel verloren wurde
+        if checkGameOver() {
+            print("Game Over!") // Debugging-Ausgabe
+            return CardDatabase.getGameOverCard() // GameOver-Karte zurückgeben
+        }
+        
+        // Normale Zuglogik
         if deck.isEmpty {
             shuffleDiscardPileIntoDeck()
         }
@@ -69,7 +80,7 @@ class GameManager {
     }
 
     
-    private func checkGameOver() -> Bool {
+    func checkGameOver() -> Bool {
         if populationGroups.contains(where: { $0.satisfaction <= 0 }) || treasury <= 0 {
             return true
         }
@@ -78,6 +89,15 @@ class GameManager {
     
     private func shuffleDiscardPileIntoDeck() {
         deck = discardPile.shuffled()
+        discardPile.removeAll()
+    }
+    
+    func resetGame() {
+        // Alle Eigenschaften auf Anfangswerte zurücksetzen
+        turnCounter = 0
+        treasury = 100
+        populationGroups = PopulationGroupDatabase.getInitialPopulationGroups()
+        deck = CardDatabase.getInitialDeck()
         discardPile.removeAll()
     }
 }
