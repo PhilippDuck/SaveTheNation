@@ -9,6 +9,7 @@ class GameManager {
     var deck: [Card] = []
     var discardPile: [Card] = []
     
+    
     // MARK: - Initialisierung
     init() {
         setupGame()

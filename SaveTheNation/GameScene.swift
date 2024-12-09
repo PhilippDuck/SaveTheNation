@@ -7,6 +7,8 @@ class GameScene: SKScene {
     private let margin: CGFloat = 15 // Margin links und rechts
     private var isDraggingCard = false
     private var populationGrid: PopulationGrid?
+    private var monthLabel: SKLabelNode!
+
     
     
     override func didMove(to view: SKView) {
@@ -27,8 +29,8 @@ class GameScene: SKScene {
 
 
 
-        // Platzhalter: Monatszähler
-        let monthLabel = SKLabelNode(text: "Regierungszeit: 0")
+        // Monatszähler erstellen
+        monthLabel = SKLabelNode(text: "Regierungszeit: 0")
         monthLabel.fontSize = 24
         monthLabel.fontName = "AvenirNext"
         monthLabel.fontColor = .white
@@ -226,6 +228,7 @@ class GameScene: SKScene {
             } else {
                 // Normale Effekte anwenden
                 self.gameManager.endTurn(accepted: accepted, card: cardNode.card)
+                self.updateMonthLabel()
                 let effects = accepted ? cardNode.card.acceptEffects : cardNode.card.rejectEffects
                 for effect in effects {
                     if let index = self.gameManager.populationGroups.firstIndex(where: { $0.name == effect.group }) {
@@ -238,11 +241,18 @@ class GameScene: SKScene {
             }
         }
         
+        
+        
         // Text herausfliegen lassen
         textNode.run(textMoveAction) {
             textNode.removeFromParent()
         }
     }
+    
+    private func updateMonthLabel() {
+        monthLabel.text = "Regierungszeit: \(gameManager.turnCounter) Monate"
+    }
+
 
 
 
